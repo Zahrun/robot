@@ -6,6 +6,11 @@ int write_in_queue(RT_QUEUE *msgQueue, void * data, int size);
 void battery(void * arg) {
 }
 
+/* Notes pratiques par rapport à la LED du robot :
+- LED clignote rapidement <=> batterie faible ( faut amener ce robot au responsable et changer de robot )
+- LED qui clignot normalement <=> robot en attente de co
+- LED allumée fixe <=> robot connecté */
+
 void calibrer(void * arg) {
 }
 void localiser(void * arg) {
@@ -32,13 +37,20 @@ void envoyer(void * arg) {
 
 void watchdog(void * arg) {
 	int status;
+	rt_task_set_periodic(NULL, TM_NOW, 250000000);
 	while (1) { // changer cond?
-        rt_printf("twathdog : Attente du sémarphore semWatchdog\n");
+        
+		rt_task_wait_period(NULL);
+		// pas de : rt_task_sleep_until(ONE_SECOND);
+		// on a une seconde pile comme ça, pas 1s + tps d'activité du watchdog		
+
+
+		rt_printf("twathdog : Attente du sémarphore semWatchdog\n");
 		rt_sem_p(&semWatchdog, TM_INFINITE);
         rt_printf("twatchdog Watchdog en marche\n");
 		status = robot->get_status(robot);
+
 		
-		rt_task_sleep_until(ONE_SECOND);// wait 1 second
 
         if (status == STATUS_OK) {
 
@@ -51,6 +63,9 @@ void watchdog(void * arg) {
 			}
         } else {
 			rt_printf("PROBLEME => twatchdog : get_status initial /= STATUS_OK\n");
+            rt_mutex_acquire(&mutexEtat, TM_INFINITE);
+            etatCommRobot = status;
+            rt_mutex_release(&mutexEtat);
 		}
 	}
 }
