@@ -4,7 +4,7 @@ CFLAGS=-I../include -I../include/x86_64-linux-gnu -I../xenomai/include  -I../lib
 OBJ=fonctions.o global.o main.o
 OBJ_SRC=../lib_destijl/source/*.o
 LIB= -L../libs/x86_64-linux-gnu -L../libs -L../libs/gcc/x86_64-linux-gnu/4.6 -L../xenomai/lib -Wl,-rpath=../libs -Wl,-rpath=../libs/x86_64-linux-gnu -lopencv_core -lopencv_highgui -lopencv_imgproc -lxenomai -lnative 
-
+ 
 all: main
 
 

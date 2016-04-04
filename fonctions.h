@@ -18,6 +18,11 @@ extern "C" {
         void communiquer(void *arg);
         void deplacer(void *arg);
         void envoyer(void *arg);
+        void watchdog(void *arg);
+        void battery (void * arg);
+        void calibrer (void * arg);
+        void localiser (void * arg);
+
 #ifdef	__cplusplus
 }
 #endif

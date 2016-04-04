@@ -34,6 +34,13 @@ int PRIORITY_TCONNECT = 20;
 int PRIORITY_TMOVE = 10;
 int PRIORITY_TENVOYER = 25;
 
+//liuzp add start
+int PRIORITY_BATTERY = 5;
+int PRIORITY_WATCHDOG = 30;
+int PRIORITY_LOCALISER = 15;
+int PRIORITY_CALIBRER = 25;
+//liuzp add end 
+
 int ONE_SECOND = 1000000 ; /* value in nanoseconds */
 
 

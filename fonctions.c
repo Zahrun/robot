@@ -2,6 +2,17 @@
 
 int write_in_queue(RT_QUEUE *msgQueue, void * data, int size);
 
+//liuzp add start
+void battery(void * arg) {
+}
+void calibrer(void * arg) {
+}
+void localiser(void * arg) {
+}
+
+//liuzp add end 
+
+
 void envoyer(void * arg) {
     DMessage *msg;
     int err;
@@ -21,9 +32,12 @@ void envoyer(void * arg) {
 void watchdog(void * arg) {
 	int status;
 	while (1) { // changer cond?
+        rt_printf("twathdog : Attente du sémarphore semWatchdog\n");
+		rt_sem_p(&semWatchdog, TM_INFINITE);
+        rt_printf("twatchdog Watchdog en marche\n");
 		status = robot->get_status(robot);
 		
-		rt_task_sleep_until(1);// wait 1 second
+		rt_task_sleep_until(ONE_SECOND);// wait 1 second
 
         if (status == STATUS_OK) {
 
@@ -58,18 +72,12 @@ void connecter(void * arg) {
         rt_mutex_release(&mutexEtat);
 
         if (status == STATUS_OK) {
-             status = robot->start_insecurely(robot);
-			//status = robot->start(robot); 
+         //    status = robot->start_insecurely(robot);
+			status = robot->start(robot); 
 			// lance le watchdog qui attendra d_robot_reload_wdt toutes les 1 sec ( avec tolérance de 50 ms )
 
-			// nouveau thread : Gestion watchdog !
-			int err;
-			/*if (err = rt_task_start(&twatchdog, &watchdog, NULL)) {
-				rt_printf("Error task start: %s\n", strerror(-err));
-				exit(EXIT_FAILURE);
-			}*/
-
-
+			// libération du semaphore pour lancer le watchdog ( twatchdog était en attente )
+			rt_sem_v(&semWatchdog);
 
             if (status == STATUS_OK){
                 rt_printf("tconnect : Robot démarrer\n");
@@ -180,7 +188,7 @@ void deplacer(void *arg) {
 
         if (status == STATUS_OK) {
             rt_mutex_acquire(&mutexMove, TM_INFINITE);
-            if (move->get_speed(move) > 50){
+            if (move->get_speed(move) > 50){ // ne marche pas en vitesse rapide...
             	switch (move->get_direction(move)) {
 		            case DIRECTION_FORWARD:
 		                gauche = MOTEUR_ARRIERE_RAPIDE;

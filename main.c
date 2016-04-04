@@ -68,6 +68,11 @@ void initStruct(void) {
         exit(EXIT_FAILURE);
     }
 
+	if (err = rt_sem_create(&semWatchdog, NULL, 0, S_FIFO)) {
+        rt_printf("Error semaphore create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE)
+	}
+
     /* Creation des taches */
     if (err = rt_task_create(&tServeur, NULL, 0, PRIORITY_TSERVEUR, 0)) {
         rt_printf("Error task create: %s\n", strerror(-err));
@@ -85,6 +90,29 @@ void initStruct(void) {
         rt_printf("Error task create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
+    //liuzp add start
+    if (err = rt_task_create(&th_battery, NULL, 0, PRIORITY_BATTERY, 0)) {
+        rt_printf("Error task create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+    if (err = rt_task_create(&th_watchdog, NULL, 0, PRIORITY_WATCHDOG, 0)) {
+        rt_printf("Error task create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+    if (err = rt_task_create(&th_localiser, NULL, 0, PRIORITY_LOCALISER, 0)) {
+        rt_printf("Error task create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+    if (err = rt_task_create(&th_calibrer, NULL, 0, PRIORITY_CALIBRER, 0)) {
+        rt_printf("Error task create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+    //liuzp add end
+
+	if (err = rt_task_start(&twatchdog, &watchdog, NULL)) {
+		rt_printf("Error task start: %s\n", strerror(-err));
+		exit(EXIT_FAILURE);
+	}
 
     /* Creation des files de messages */
     if (err = rt_queue_create(&queueMsgGUI, "toto", MSG_QUEUE_SIZE*sizeof(DMessage), MSG_QUEUE_SIZE, Q_FIFO)){
@@ -116,6 +144,24 @@ void startTasks() {
         rt_printf("Error task start: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
+    //liuzp add start
+    if (err = rt_task_start(&tbattery, &battery, NULL)) {
+        rt_printf("Error task start: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+    if (err = rt_task_start(&twatchdog, &watchdog, NULL)) {
+        rt_printf("Error task start: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+    if (err = rt_task_start(&tlocaliser, &localiser, NULL)) {
+        rt_printf("Error task start: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+    if (err = rt_task_start(&tcalibrer, &calibrer, NULL)) {
+        rt_printf("Error task start: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+    //liuzp add end 
 
 }
 
@@ -123,4 +169,8 @@ void deleteTasks() {
     rt_task_delete(&tServeur);
     rt_task_delete(&tconnect);
     rt_task_delete(&tmove);
+    rt_task_delete(&tbattery);
+    rt_task_delete(&twatchdog);
+    rt_task_delete(&tlocaliser);
+    rt_task_delete(&tcalibrer);
 }
