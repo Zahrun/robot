@@ -9,6 +9,7 @@
 #define	GLOBAL_H
 
 #define ONE_SECOND = 1000000 ;
+#define QUARTER_SECOND = 250000 ;
 
 #include "includes.h"
 
