@@ -85,24 +85,6 @@ void initStruct(void) {
         rt_printf("Error task create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
-    //liuzp add start
-    if (err = rt_task_create(&th_battery, NULL, 0, PRIORITY_BATTERY, 0)) {
-        rt_printf("Error task create: %s\n", strerror(-err));
-        exit(EXIT_FAILURE);
-    }
-    if (err = rt_task_create(&th_watchdog, NULL, 0, PRIORITY_WATCHDOG, 0)) {
-        rt_printf("Error task create: %s\n", strerror(-err));
-        exit(EXIT_FAILURE);
-    }
-    if (err = rt_task_create(&th_localiser, NULL, 0, PRIORITY_LOCALISER, 0)) {
-        rt_printf("Error task create: %s\n", strerror(-err));
-        exit(EXIT_FAILURE);
-    }
-    if (err = rt_task_create(&th_calibrer, NULL, 0, PRIORITY_CALIBRER, 0)) {
-        rt_printf("Error task create: %s\n", strerror(-err));
-        exit(EXIT_FAILURE);
-    }
-    //liuzp add end
 
     /* Creation des files de messages */
     if (err = rt_queue_create(&queueMsgGUI, "toto", MSG_QUEUE_SIZE*sizeof(DMessage), MSG_QUEUE_SIZE, Q_FIFO)){
@@ -134,24 +116,6 @@ void startTasks() {
         rt_printf("Error task start: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
-    //liuzp add start
-    if (err = rt_task_start(&th_battery, &battery, NULL)) {
-        rt_printf("Error task start: %s\n", strerror(-err));
-        exit(EXIT_FAILURE);
-    }
-    if (err = rt_task_start(&th_watchdog, &watchdog, NULL)) {
-        rt_printf("Error task start: %s\n", strerror(-err));
-        exit(EXIT_FAILURE);
-    }
-    if (err = rt_task_start(&th_localiser, &localiser, NULL)) {
-        rt_printf("Error task start: %s\n", strerror(-err));
-        exit(EXIT_FAILURE);
-    }
-    if (err = rt_task_start(&th_calibrer, &calibrer, NULL)) {
-        rt_printf("Error task start: %s\n", strerror(-err));
-        exit(EXIT_FAILURE);
-    }
-    //liuzp add end 
 
 }
 
@@ -159,10 +123,4 @@ void deleteTasks() {
     rt_task_delete(&tServeur);
     rt_task_delete(&tconnect);
     rt_task_delete(&tmove);
-    //lizp add start
-    rt_task_delete(&th_battery);
-    rt_task_delete(&th_watchdog);
-    rt_task_delete(&th_localiser);
-    rt_task_delete(&th_calibrer);
-    //lizp add end 
 }

@@ -1,0 +1,9 @@
+git add *
+git commit -m "ajout thread..."
+git push
+
+
+
+----
+
+git pull

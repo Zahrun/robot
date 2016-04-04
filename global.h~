@@ -16,14 +16,6 @@ extern RT_TASK tconnect;
 extern RT_TASK tmove;
 extern RT_TASK tenvoyer;
 
-//liuzp add start
-extern RT_TASK th_battery;
-extern RT_TASK th_watchdog;
-extern RT_TASK th_localiser;
-extern RT_TASK th_calibrer;
-//liuzp add end 
-
-
 /* @descripteurs des mutex */
 extern RT_MUTEX mutexEtat;
 extern RT_MUTEX mutexMove;
@@ -47,13 +39,6 @@ extern int PRIORITY_TSERVEUR;
 extern int PRIORITY_TCONNECT;
 extern int PRIORITY_TMOVE;
 extern int PRIORITY_TENVOYER;
-
-//liuzp add start 
-extern int PRIORITY_BATTERY;
-extern int PRIORITY_WATCHDOG;
-extern int PRIORITY_LOCALISER;
-extern int PRIORITY_CALIBRER;
-//liuzp add end
 
 #endif	/* GLOBAL_H */
 
