@@ -2,7 +2,7 @@
 
 int write_in_queue(RT_QUEUE *msgQueue, void * data, int size);
 
-//liuzp add start
+
 void battery(void * arg) {
     int *bat;
     DMessage *message;
@@ -39,12 +39,18 @@ void battery(void * arg) {
         }
     }
 }
+
+/* Notes pratiques par rapport à la LED du robot :
+- LED clignote rapidement <=> batterie faible ( faut amener ce robot au responsable et changer de robot )
+- LED qui clignot normalement <=> robot en attente de co
+- LED allumée fixe <=> robot connecté */
+
 void calibrer(void * arg) {
 }
 void localiser(void * arg) {
 }
 
-//liuzp add end 
+
 
 
 void envoyer(void * arg) {
@@ -65,14 +71,20 @@ void envoyer(void * arg) {
 
 void watchdog(void * arg) {
 	int status;
+	rt_task_set_periodic(NULL, TM_NOW, 250000000);
 	while (1) { // changer cond?
+        
+		rt_task_wait_period(NULL);
+		// pas de : rt_task_sleep_until(ONE_SECOND);
+		// on a une seconde pile comme ça, pas 1s + tps d'activité du watchdog		
 
-        rt_printf("twathdog : Attente du sémarphore semWatchdog\n");
+
+		rt_printf("twathdog : Attente du sémarphore semWatchdog\n");
 		rt_sem_p(&semWatchdog, TM_INFINITE);
         rt_printf("twatchdog Watchdog en marche\n");
 		status = robot->get_status(robot);
+
 		
-		rt_task_sleep_until(ONE_SECOND);// wait 1 second
 
         if (status == STATUS_OK) {
 
@@ -85,6 +97,9 @@ void watchdog(void * arg) {
 			}
         } else {
 			rt_printf("PROBLEME => twatchdog : get_status initial /= STATUS_OK\n");
+            rt_mutex_acquire(&mutexEtat, TM_INFINITE);
+            etatCommRobot = status;
+            rt_mutex_release(&mutexEtat);
 		}
 	}
 }
@@ -107,7 +122,7 @@ void connecter(void * arg) {
         rt_mutex_release(&mutexEtat);
 
         if (status == STATUS_OK) {
-            // status = robot->start_insecurely(robot);
+         //    status = robot->start_insecurely(robot);
 			status = robot->start(robot); 
 			// lance le watchdog qui attendra d_robot_reload_wdt toutes les 1 sec ( avec tolérance de 50 ms )
 
@@ -149,8 +164,16 @@ void communiquer(void *arg) {
         var1 = serveur->receive(serveur, msg);
         num_msg++;
         if (var1 > 0) {
+        /*Type du message. Les différents types sont : 
+     * #MESSAGE_TYPE_UNKNOWN, #MESSAGE_TYPE_CHAR, #MESSAGE_TYPE_INT, 
+     * #MESSAGE_TYPE_STRING, #MESSAGE_TYPE_STATE, #MESSAGE_TYPE_IMAGE,
+     * #MESSAGE_TYPE_BATTERY, #MESSAGE_TYPE_MOVEMENT, #MESSAGE_TYPE_ACTION, 
+     * #MESSAGE_TYPE_ORDER, #MESSAGE_TYPE_POSITION, #MESSAGE_TYPE_MISSION*/
             switch (msg->get_type(msg)) {
                 case MESSAGE_TYPE_ACTION:
+                /*possibles sont :#ACTION_FIND_ARENA, #ACTION_ARENA_FAILED,
+	 * #ACTION_ARENA_IS_FOUND, #ACTION_COMPUTE_CONTINUOUSLY_POSITION,
+	 * #ACTION_CONNECT_ROBOT, #ACTION_ARENA_FAILED*/
                     rt_printf("tserver : Le message %d reçu est une action\n",
                             num_msg);
                     DAction *action = d_new_action();
@@ -160,6 +183,23 @@ void communiquer(void *arg) {
                             rt_printf("tserver : Action connecter robot\n");
                             rt_sem_v(&semConnecterRobot);
                             break;
+                            // début ajout clément
+                            case ACTION_FIND_ARENA: // TODO
+                            rt_printf("tserver : Action trouver arene\n");
+                            break;
+                        case ACTION_ARENA_FAILED: // TODO
+                            rt_printf("tserver : Action échec detection arene\n");
+                            break;
+                        case ACTION_ARENA_IS_FOUND: // TODO
+                            rt_printf("tserver : Action arene trouvée\n");
+                            break;
+                        case ACTION_COMPUTE_CONTINUOUSLY_POSITION: // TODO
+                            rt_printf("tserver : Action calculer position en continu\n");
+                            break;
+                        case ACTION_STOP_COMPUTE_POSITION: // TODO
+                            rt_printf("tserver : Action arreter calcul position\n");
+                            break;
+                            //fin ajout clément
                     }
                     break;
                 case MESSAGE_TYPE_MOVEMENT:
