@@ -1,4 +1,4 @@
-git add *
+git add *.c *.h
 git commit -m "ajout thread..."
 git push
 
