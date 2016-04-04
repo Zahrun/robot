@@ -135,8 +135,9 @@ void communiquer(void *arg) {
                             rt_sem_v(&semConnecterRobot);
                             break;
                             // début ajout clément
-                            case ACTION_FIND_ARENA: // TODO
+                            case ACTION_FIND_ARENA:
                             rt_printf("tserver : Action trouver arene\n");
+                            rt_sem_v(&semDetectArena);
                             break;
                         case ACTION_ARENA_FAILED: // TODO
                             rt_printf("tserver : Action échec detection arene\n");
@@ -219,6 +220,10 @@ void deplacer(void *arg) {
 		                gauche = MOTEUR_AVANT_RAPIDE;
 		                droite = MOTEUR_AVANT_RAPIDE;
 		                break;
+                default:
+                	rt_printf("pas bonne direction\n");
+                	break;
+		                
 		        }
             } else{
 		        switch (move->get_direction(move)) {
@@ -242,6 +247,9 @@ void deplacer(void *arg) {
 		                gauche = MOTEUR_AVANT_LENT;
 		                droite = MOTEUR_AVANT_LENT;
 		                break;
+                default:
+                	rt_printf("pas bonne direction\n");
+                	break;
 		        }
             }
             rt_mutex_release(&mutexMove);
