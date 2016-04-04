@@ -33,7 +33,6 @@ void envoyer(void * arg) {
 void watchdog(void * arg) {
 	int status;
 	while (1) { // changer cond?
-
         rt_printf("twathdog : Attente du sémarphore semWatchdog\n");
 		rt_sem_p(&semWatchdog, TM_INFINITE);
         rt_printf("twatchdog Watchdog en marche\n");
@@ -74,7 +73,7 @@ void connecter(void * arg) {
         rt_mutex_release(&mutexEtat);
 
         if (status == STATUS_OK) {
-            // status = robot->start_insecurely(robot);
+         //    status = robot->start_insecurely(robot);
 			status = robot->start(robot); 
 			// lance le watchdog qui attendra d_robot_reload_wdt toutes les 1 sec ( avec tolérance de 50 ms )
 
@@ -127,6 +126,23 @@ void communiquer(void *arg) {
                             rt_printf("tserver : Action connecter robot\n");
                             rt_sem_v(&semConnecterRobot);
                             break;
+                            // début ajout clément
+                            case ACTION_FIND_ARENA: // TODO
+                            rt_printf("tserver : Action trouver arene\n");
+                            break;
+                        case ACTION_ARENA_FAILED: // TODO
+                            rt_printf("tserver : Action échec detection arene\n");
+                            break;
+                        case ACTION_ARENA_IS_FOUND: // TODO
+                            rt_printf("tserver : Action arene trouvée\n");
+                            break;
+                        case ACTION_COMPUTE_CONTINUOUSLY_POSITION: // TODO
+                            rt_printf("tserver : Action calculer position en continu\n");
+                            break;
+                        case ACTION_STOP_COMPUTE_POSITION: // TODO
+                            rt_printf("tserver : Action arreter calcul position\n");
+                            break;
+                            //fin ajout clément
                     }
                     break;
                 case MESSAGE_TYPE_MOVEMENT:

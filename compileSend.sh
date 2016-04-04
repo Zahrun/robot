@@ -4,4 +4,4 @@ make
 
 echo FIN MAKE
 
-./upload.sh 01 robot
+./upload.sh $1 robot
