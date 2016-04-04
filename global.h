@@ -34,6 +34,7 @@ extern RT_MUTEX mutexMove;
 extern RT_SEM semDetectArena;
 extern RT_SEM semConnecterRobot;
 extern RT_SEM semWatchdog;
+extern RT_SEM semCamera;
 
 /* @descripteurs des files de messages */
 extern RT_QUEUE queueMsgGUI;

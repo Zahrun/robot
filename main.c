@@ -1,3 +1,7 @@
+// TODO Attention aux notations
+// utiliser les mêmes notations que si qu'on avait initialement 
+// surtout avec les noms de threads / taches / semaphores
+
 #include "includes.h"
 #include "global.h"
 #include "fonctions.h"
@@ -90,26 +94,22 @@ void initStruct(void) {
         rt_printf("Error task create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
-    //liuzp add start
-    if (err = rt_task_create(&th_battery, NULL, 0, PRIORITY_BATTERY, 0)) {
-        rt_printf("Error task create: %s\n", strerror(-err));
-        exit(EXIT_FAILURE);
-    }
-    if (err = rt_task_create(&th_watchdog, NULL, 0, PRIORITY_WATCHDOG, 0)) {
-        rt_printf("Error task create: %s\n", strerror(-err));
-        exit(EXIT_FAILURE);
-    }
-    if (err = rt_task_create(&th_localiser, NULL, 0, PRIORITY_LOCALISER, 0)) {
-        rt_printf("Error task create: %s\n", strerror(-err));
-        exit(EXIT_FAILURE);
-    }
-    if (err = rt_task_create(&th_calibrer, NULL, 0, PRIORITY_CALIBRER, 0)) {
-        rt_printf("Error task create: %s\n", strerror(-err));
-        exit(EXIT_FAILURE);
-    }
-    //liuzp add end
 
-	if (err = rt_task_start(&twatchdog, &watchdog, NULL)) {
+    if (err = rt_task_create(&tbattery, NULL, 0, PRIORITY_BATTERY, 0)) {
+        rt_printf("Error task create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+    if (err = rt_task_create(&twatchdog, NULL, 0, PRIORITY_WATCHDOG, 0)) {
+        rt_printf("Error task create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+
+    if (err = rt_task_create(&tcalibrer, NULL, 0, PRIORITY_CALIBRER, 0)) {
+        rt_printf("Error task create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+
+	if (err = rt_task_create(&twatchdog, &watchdog, NULL)) {
 		rt_printf("Error task start: %s\n", strerror(-err));
 		exit(EXIT_FAILURE);
 	}
@@ -144,7 +144,7 @@ void startTasks() {
         rt_printf("Error task start: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
-    //liuzp add start
+
     if (err = rt_task_start(&tbattery, &battery, NULL)) {
         rt_printf("Error task start: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
@@ -161,13 +161,14 @@ void startTasks() {
         rt_printf("Error task start: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
-    //liuzp add end 
+
 
 }
 
 void deleteTasks() {
     rt_task_delete(&tServeur);
     rt_task_delete(&tconnect);
+    rt_task_delete(&tcommuniquer);
     rt_task_delete(&tmove);
     rt_task_delete(&tbattery);
     rt_task_delete(&twatchdog);
