@@ -2,17 +2,16 @@
 
 int write_in_queue(RT_QUEUE *msgQueue, void * data, int size);
 
-//liuzp add start
+
 void battery(void * arg) {
 }
-void watchdog(void * arg) {
-}
+
 void calibrer(void * arg) {
 }
 void localiser(void * arg) {
 }
 
-//liuzp add end 
+
 
 
 void envoyer(void * arg) {
