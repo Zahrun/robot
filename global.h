@@ -8,6 +8,8 @@
 #ifndef GLOBAL_H
 #define	GLOBAL_H
 
+#define ONE_SECOND = 1000000 ;
+
 #include "includes.h"
 
 /* @descripteurs des tâches */
@@ -22,6 +24,7 @@ extern RT_MUTEX mutexMove;
 
 /* @descripteurs des sempahore */
 extern RT_SEM semConnecterRobot;
+extern RT_SEM semWatchdog;
 
 /* @descripteurs des files de messages */
 extern RT_QUEUE queueMsgGUI;
@@ -39,6 +42,7 @@ extern int PRIORITY_TSERVEUR;
 extern int PRIORITY_TCONNECT;
 extern int PRIORITY_TMOVE;
 extern int PRIORITY_TENVOYER;
+extern int PRIORITY_TWATCHDOG; // todo
 
 #endif	/* GLOBAL_H */
 
