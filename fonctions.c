@@ -4,8 +4,40 @@ int write_in_queue(RT_QUEUE *msgQueue, void * data, int size);
 
 //liuzp add start
 void battery(void * arg) {
-}
-void watchdog(void * arg) {
+    int *bat;
+    DMessage *message;
+    DBattery *battery;
+	int status;
+    while(1)
+    {
+		rt_task_sleep_until(QUARTER_SECOND);// 250ms
+		status = robot->get_vbat(robot,bat);
+        rt_printf("Battery info: %d\n", *bat);
+        if(status == BATTERY_OFF)
+        {
+            rt_printf("Battery OFF info: %d, capacite: %d\n",status, *bat);
+        }
+        else if(status == BATTERY_LOW)
+        {
+            rt_printf("Battery LOW info: %d, capacite: %d\n",status, *bat);
+
+        }
+        else if(status == BATTERY_OK)
+        {
+            rt_printf("Battery info: %d, capacite: %d\n",status, *bat);
+        }
+        else
+        {
+            rt_printf("Battery ERROR info");
+        }
+        battery->setlevel(battery,*bat);
+        message = d_new_message();
+        message->put_battery_level(message, *battery);
+        
+        if (write_in_queue(&queueMsgGUI, message, sizeof (DMessage)) < 0) {
+            message->free(message);
+        }
+    }
 }
 void calibrer(void * arg) {
 }
