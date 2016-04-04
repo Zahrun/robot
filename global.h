@@ -31,6 +31,7 @@ extern RT_MUTEX mutexEtat;
 extern RT_MUTEX mutexMove;
 
 /* @descripteurs des sempahore */
+extern RT_SEM semDetectArena;
 extern RT_SEM semConnecterRobot;
 extern RT_SEM semWatchdog;
 

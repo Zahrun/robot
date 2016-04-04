@@ -114,8 +114,16 @@ void communiquer(void *arg) {
         var1 = serveur->receive(serveur, msg);
         num_msg++;
         if (var1 > 0) {
+        /*Type du message. Les différents types sont : 
+     * #MESSAGE_TYPE_UNKNOWN, #MESSAGE_TYPE_CHAR, #MESSAGE_TYPE_INT, 
+     * #MESSAGE_TYPE_STRING, #MESSAGE_TYPE_STATE, #MESSAGE_TYPE_IMAGE,
+     * #MESSAGE_TYPE_BATTERY, #MESSAGE_TYPE_MOVEMENT, #MESSAGE_TYPE_ACTION, 
+     * #MESSAGE_TYPE_ORDER, #MESSAGE_TYPE_POSITION, #MESSAGE_TYPE_MISSION*/
             switch (msg->get_type(msg)) {
                 case MESSAGE_TYPE_ACTION:
+                /*possibles sont :#ACTION_FIND_ARENA, #ACTION_ARENA_FAILED,
+	 * #ACTION_ARENA_IS_FOUND, #ACTION_COMPUTE_CONTINUOUSLY_POSITION,
+	 * #ACTION_CONNECT_ROBOT, #ACTION_ARENA_FAILED*/
                     rt_printf("tserver : Le message %d reçu est une action\n",
                             num_msg);
                     DAction *action = d_new_action();
