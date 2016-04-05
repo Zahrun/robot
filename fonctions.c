@@ -37,7 +37,7 @@ void envoyer(void * arg) {
 
 void watchdog(void * arg) {
 	int status;
-	rt_task_set_periodic(NULL, TM_NOW, 250000000);
+	rt_task_set_periodic(NULL, TM_NOW, ONE_SECOND);
 	while (1) { // changer cond?
         
 		rt_task_wait_period(NULL);
