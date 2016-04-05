@@ -46,8 +46,34 @@ void battery(void * arg) {
 - LED allumée fixe <=> robot connecté */
 
 void calibrer(void * arg) {
+        //init msg
+        DMessage *message;
+
+        //init camera
+        DCamera *camera;
+        camera = d_new_camera();
+        d_camera_init(camera);
+        //init Dimage;
+        DImage *img;
+        //init Djpegimage
+        DJpegimage *jpegimg;
+        while(1)
+        {
+            img=d_new_image();
+            d_image_init(img);
+            jpegimg= d_new_jpegimage();
+            d_jpegimage_init(jpegimg);
+
+            camera->get_frame(img);
+            d_jpegimage_compress(jpegimg,img);
+            message = d_new_message();
+            d_message_put_jpeg_image(message,jpegimg);
+        }
 }
 void localiser(void * arg) {
+    int status;
+    DMessage *msg;
+
 }
 
 
