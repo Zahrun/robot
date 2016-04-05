@@ -1,10 +1,12 @@
 #include "global.h"
 
+RT_TASK tbattery;
+RT_TASK tcalibrer;
 RT_TASK tcommuniquer;
 RT_TASK tconnect;
 RT_TASK tdeplacer;
-RT_TASK tbattery;
 RT_TASK tenvoyer;
+RT_TASK tlocaliser;
 RT_TASK twatchdog;
 
 RT_MUTEX mutexEtat;
