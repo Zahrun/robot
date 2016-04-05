@@ -9,42 +9,42 @@ void battery(void * arg) {
     DMessage *message;
     DBattery *battery = d_new_battery();
     int status;
+
+    rt_printf("tbattery : Attente du sémaphore semWatchdog\n");
+    rt_sem_p(&semBatterie, TM_INFINITE);
+    rt_printf("tbattery : Lancement de test de batterie (sémaphore reçue)\n");
+
     rt_task_set_periodic(NULL, TM_NOW, QUARTER_SECOND); // 250ms
 
     while (1) {
-        rt_printf("tbattery : Attente du sémaphore semWatchdog\n");
-        rt_sem_p(&semBatterie, TM_INFINITE);
-        rt_printf("tbattery : Lancement de test de batterie (sémaphore reçue)\n");
+        rt_mutex_acquire(&mutexEtat, TM_INFINITE);
+        status = etatCommRobot;
+        rt_mutex_release(&mutexEtat);
 
-        while (1) {
-            rt_mutex_acquire(&mutexEtat, TM_INFINITE);
-            status = etatCommRobot;
-            rt_mutex_release(&mutexEtat);
-
-            if (status != STATUS_OK) {
-                break;
-            }
-
-            status = robot->get_vbat(robot, &bat);
-            if (status == STATUS_OK) {
-                rt_printf("Battery OK status: %d, niveau: %d\n", status, bat);
-
-                battery = d_new_battery();
-                battery->set_level(battery, bat);
-                message = d_new_message();
-                message->put_battery_level(message, battery);
-                message->print(message,100);
-
-                if (write_in_queue(&queueMsgGUI, message, sizeof (DMessage)) < 0) {
-                    message->free(message);
-                }
-            } else {
-                rt_printf("Battery ERROR status: %d, niveau: %d\n", status, bat);
-            }
-
-            rt_task_wait_period(NULL); // plus précis que : rt_task_sleep_until()
+        if (status != STATUS_OK) {
+            break;
         }
+
+        status = robot->get_vbat(robot, &bat);
+        if (status == STATUS_OK) {
+            rt_printf("Battery OK status: %d, niveau: %d\n", status, bat);
+
+            battery = d_new_battery();
+            battery->set_level(battery, bat);
+            message = d_new_message();
+            message->put_battery_level(message, battery);
+            message->print(message, 100);
+
+            if (write_in_queue(&queueMsgGUI, message, sizeof (DMessage)) < 0) {
+                message->free(message);
+            }
+        } else {
+            rt_printf("Battery ERROR status: %d, niveau: %d\n", status, bat);
+        }
+
+        rt_task_wait_period(NULL); // plus précis que : rt_task_sleep_until()
     }
+}
 
 }
 
@@ -81,10 +81,108 @@ void calibrer(void * arg) {
 
 }
 
-void localiser(void * arg) {
+void localiser(void * arg) { // En cours ( Alexis )
     int status;
     DMessage *msg;
+    //init camera
+    DCamera *camera;
+    camera = d_new_camera();
+    //init Dimage;
+    DImage *img;
+    //init Djpegimage
+    DJpegimage *jpegimg;
 
+    rt_printf("tlocaliser : Attente du sémarphore semLocalisation\n");
+    rt_sem_p(&semLocalisation, TM_INFINITE);
+    rt_printf("tlocaliser : Lancement de la localisation selon etatLocalisation (sémaphore reçue)\n");
+
+    rt_task_set_periodic(NULL, TM_NOW, PERIOD_LOCALISER); // sujet -> 600ms
+
+    while (1) {
+        rt_task_wait_period(NULL);
+
+        //On check l'état de la communication avec le moniteur
+        //Pour cela on récupère le mutexEtat
+        //On écrit l'état de la comunication dans la variable status et on relanche le mutexEtat
+        rt_mutex_acquire(&mutexEtat, TM_INFINITE);
+        status = etatCommMoniteur;
+        rt_mutex_release(&mutexEtat);
+
+        if (status == STATUS_OK) {
+
+            //On veut mettre l'etat de l'action a effectuer dans la variable action
+            //On recupere le mutexCamera puis on le relache
+            rt_mutex_acquire(&mutexCamera, TM_INFINITE);
+            action = etatLocalisation;
+            rt_mutex_release(&mutexCamera);
+
+            //On regarde quelle est la valeur de la variable action
+            //En fonction, on va soit calculer la position du robot, soit ne rien faire
+
+            switch (action) {
+                    //Calcul de la position du robot dans l'arene
+                case ACTION_STOP_COMPUTE_POSITION:
+                    rt_printf("tlocaliser : ACTION_STOP_COMPUTE_POSITION detecté\n");
+                    image = d_new_image();
+                    camera->get_frame(camera, image);
+
+                    if (image != NULL) {
+                        jpeg = d_new_jpegimage();
+                        jpeg->compress(jpeg, image);
+
+                        message = d_new_message();
+                        message->put_jpeg_image(message, jpeg);
+
+                        // TODO : Dire à calibrer arène qu'on a envoyé une image pour qu'il calibre à partir de cette image?
+                        if (write_in_queue(&queueMsgGUI, message, sizeof (DMessage)) < 0) {
+                            message->free(message);
+                        }
+
+                        image->free(image);
+                        jpeg->free(jpeg);
+                    }
+                    break;
+
+                case ACTION_COMPUTE_CONTINUOUSLY_POSITION:
+                    rt_printf("tlocaliser : ACTION_COMPUTE_CONTINUOUSLY_POSITION detecté\n");
+                    image = d_new_image();
+                    camera->get_frame(camera, image);
+
+                    if (image != NULL) {
+
+                        rt_mutex_acquire(&mutexPosition, TM_INFINITE);
+                        position = image->compute_robot_position(image, arena);
+                        rt_mutex_release(&mutexPosition);
+
+
+                        if (position != NULL) {
+                            d_imageshop_draw_position(image, position);
+                            message = d_new_message();
+                            message->put_position(message, position);
+
+                            if (write_in_queue(&queueMsgGUI, message, sizeof (DMessage)) < 0) {
+                                message->free(message);
+                            }
+                            jpeg = d_new_jpegimage();
+                            jpeg->compress(jpeg, image);
+
+                            message = d_new_message();
+                            message->put_jpeg_image(message, jpeg);
+
+                            if (write_in_queue(&queueMsgGUI, message, sizeof (DMessage)) < 0) {
+                                message->free(message);
+                            }
+                            jpeg->free(jpeg);
+                        }
+                        image->free(image);
+
+                    }
+
+                    break;
+
+            }
+        }
+    }
 }
 
 void envoyer(void * arg) {
@@ -161,9 +259,18 @@ void connecter(void * arg) {
             //status = robot->start(robot);
             // lance le watchdog qui attendra d_robot_reload_wdt toutes les 1 sec ( avec tolérance de 50 ms )
 
+            << << << < HEAD
             rt_mutex_acquire(&mutexEtat, TM_INFINITE);
             etatCommRobot = status;
             rt_mutex_release(&mutexEtat);
+            == == == =
+                    // libération du semaphore pour lancer le watchdog ( twatchdog était en attente )
+                    rt_sem_v(&semWatchdog);
+            // libération du semaphore pour lancer le test de batterie ( tbattery était en attente )
+            rt_sem_v(&semBatterie);
+            // libération du semaphore pour lancer le thread de localisation ( tlocaliser était en attente )
+            rt_sem_v(&semLocalisation);
+            >> >> >> > d45207f8f3c5f9fe9f58559fc52906a7dc2a8894
 
             if (status == STATUS_OK) {
                 rt_printf("tconnect : Robot démarrer\n");
@@ -237,11 +344,24 @@ void communiquer(void *arg) {
                             break;
                         case ACTION_COMPUTE_CONTINUOUSLY_POSITION: // TODO
                             rt_printf("tserver : Action calculer position en continu\n");
+
+                            //On desire changer l'etat de la variable etatCamera ( qui sera lu par le thread tlocaliser )
+                            //Pour cela on récupère le mutexCamera et on ecrit l'etat
+                            rt_mutex_acquire(&mutexCamera, TM_INFINITE);
+                            etatLocalisation = ACTION_COMPUTE_CONTINUOUSLY_POSITION;
+                            rt_mutex_release(&mutexCamera);
                             break;
+
                         case ACTION_STOP_COMPUTE_POSITION: // TODO
                             rt_printf("tserver : Action arreter calcul position\n");
+
+                            //On desire changer l'etat de la variable etatCamera ( qui sera lu par le thread tlocaliser )
+                            //Pour cela on récupère le mutexCamera et on ecrit l'etat
+                            rt_mutex_acquire(&mutexCamera, TM_INFINITE);
+                            etatLocalisation = ACTION_STOP_COMPUTE_POSITION;
+                            rt_mutex_release(&mutexCamera);
                             break;
-                            //fin ajout clément
+
                     }
                     break;
                 case MESSAGE_TYPE_MOVEMENT:

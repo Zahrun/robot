@@ -61,7 +61,13 @@ void initStruct(void) {
         rt_printf("Error mutex create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
+
     if (err = rt_mutex_create(&mutexMove, NULL)) {
+        rt_printf("Error mutex create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+
+    if (err = rt_mutex_create(&mutexCamera, NULL)) {
         rt_printf("Error mutex create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
@@ -85,6 +91,11 @@ void initStruct(void) {
     if (err = rt_sem_create(&semDetectArena, NULL, 0, S_FIFO)) {
         rt_printf("Error semaphore create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
+    }
+
+    if (err = rt_sem_create(&semLocalisation, NULL, 0, S_FIFO)) {
+        rt_printf("Error semaphore create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE)
     }
 
     /* Creation des taches */
