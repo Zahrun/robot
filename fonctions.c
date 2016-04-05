@@ -151,6 +151,7 @@ void localiser(void * arg) { // En cours ( Alexis )
 
                     if (image != NULL) {
 
+                           // TODO avoir une arena donnée par calibrer !
                         rt_mutex_acquire(&mutexPosition, TM_INFINITE);
                         position = image->compute_robot_position(image, arena);
                         rt_mutex_release(&mutexPosition);
