@@ -95,7 +95,7 @@ void initStruct(void) {
 
     if (err = rt_sem_create(&semLocalisation, NULL, 0, S_FIFO)) {
         rt_printf("Error semaphore create: %s\n", strerror(-err));
-        exit(EXIT_FAILURE)
+        exit(EXIT_FAILURE);
     }
 
     /* Creation des taches */

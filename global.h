@@ -23,6 +23,7 @@ extern RT_TASK tcalibrer;
 extern RT_MUTEX mutexEtat;
 extern RT_MUTEX mutexMove;
 extern RT_MUTEX mutexCamera;
+extern RT_MUTEX mutexPosition;
 
 /* @descripteurs des sempahore */
 extern RT_SEM semDetectArena; // ACTION_FIND_ARENA

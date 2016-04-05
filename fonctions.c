@@ -46,8 +46,6 @@ void battery(void * arg) {
     }
 }
 
-}
-
 /* Notes pratiques par rapport à la LED du robot :
 - LED clignote rapidement <=> batterie faible ( faut amener ce robot au responsable et changer de robot )
 - LED qui clignot normalement <=> robot en attente de co
@@ -82,15 +80,17 @@ void calibrer(void * arg) {
 }
 
 void localiser(void * arg) { // En cours ( Alexis )
-    int status;
-    DMessage *msg;
+    int status, action;
+    DMessage *message;
     //init camera
     DCamera *camera;
     camera = d_new_camera();
     //init Dimage;
-    DImage *img;
+    DImage *image;
     //init Djpegimage
-    DJpegimage *jpegimg;
+    DJpegimage *jpeg;
+    DPosition *position;
+    DArena *arena;
 
     rt_printf("tlocaliser : Attente du sémarphore semLocalisation\n");
     rt_sem_p(&semLocalisation, TM_INFINITE);
@@ -259,18 +259,9 @@ void connecter(void * arg) {
             //status = robot->start(robot);
             // lance le watchdog qui attendra d_robot_reload_wdt toutes les 1 sec ( avec tolérance de 50 ms )
 
-            << << << < HEAD
             rt_mutex_acquire(&mutexEtat, TM_INFINITE);
             etatCommRobot = status;
             rt_mutex_release(&mutexEtat);
-            == == == =
-                    // libération du semaphore pour lancer le watchdog ( twatchdog était en attente )
-                    rt_sem_v(&semWatchdog);
-            // libération du semaphore pour lancer le test de batterie ( tbattery était en attente )
-            rt_sem_v(&semBatterie);
-            // libération du semaphore pour lancer le thread de localisation ( tlocaliser était en attente )
-            rt_sem_v(&semLocalisation);
-            >> >> >> > d45207f8f3c5f9fe9f58559fc52906a7dc2a8894
 
             if (status == STATUS_OK) {
                 rt_printf("tconnect : Robot démarrer\n");
@@ -279,6 +270,8 @@ void connecter(void * arg) {
                 rt_sem_v(&semWatchdog);
                 // libération du semaphore pour lancer le test de batterie ( tbattery était en attente )
                 rt_sem_v(&semBatterie);
+                // libération du semaphore pour lancer le thread de localisation ( tlocaliser était en attente )
+                rt_sem_v(&semLocalisation);
             }
         }
 
