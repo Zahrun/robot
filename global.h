@@ -9,6 +9,7 @@
 #define	GLOBAL_H
 
 #define ONE_SECOND = 1000000 ;
+#define QUARTER_SECOND = 250000 ;
 
 #include "includes.h"
 
@@ -31,7 +32,7 @@ extern RT_MUTEX mutexEtat;
 extern RT_MUTEX mutexMove;
 
 /* @descripteurs des sempahore */
-extern RT_SEM semDetectArena;
+extern RT_SEM semDetectArena;			// ACTION_FIND_ARENA
 extern RT_SEM semConnecterRobot;
 extern RT_SEM semWatchdog;
 extern RT_SEM semCamera;

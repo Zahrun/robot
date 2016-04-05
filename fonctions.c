@@ -4,6 +4,40 @@ int write_in_queue(RT_QUEUE *msgQueue, void * data, int size);
 
 
 void battery(void * arg) {
+    int *bat;
+    DMessage *message;
+    DBattery *battery;
+	int status;
+    while(1)
+    {
+		rt_task_sleep_until(QUARTER_SECOND);// 250ms
+		status = robot->get_vbat(robot,bat);
+        rt_printf("Battery info: %d\n", *bat);
+        if(status == BATTERY_OFF)
+        {
+            rt_printf("Battery OFF info: %d, capacite: %d\n",status, *bat);
+        }
+        else if(status == BATTERY_LOW)
+        {
+            rt_printf("Battery LOW info: %d, capacite: %d\n",status, *bat);
+
+        }
+        else if(status == BATTERY_OK)
+        {
+            rt_printf("Battery info: %d, capacite: %d\n",status, *bat);
+        }
+        else
+        {
+            rt_printf("Battery ERROR info");
+        }
+        battery->setlevel(battery,*bat);
+        message = d_new_message();
+        message->put_battery_level(message, *battery);
+        
+        if (write_in_queue(&queueMsgGUI, message, sizeof (DMessage)) < 0) {
+            message->free(message);
+        }
+    }
 }
 
 /* Notes pratiques par rapport à la LED du robot :
@@ -12,8 +46,34 @@ void battery(void * arg) {
 - LED allumée fixe <=> robot connecté */
 
 void calibrer(void * arg) {
+        //init msg
+        DMessage *message;
+
+        //init camera
+        DCamera *camera;
+        camera = d_new_camera();
+        d_camera_init(camera);
+        //init Dimage;
+        DImage *img;
+        //init Djpegimage
+        DJpegimage *jpegimg;
+        while(1)
+        {
+            img=d_new_image();
+            d_image_init(img);
+            jpegimg= d_new_jpegimage();
+            d_jpegimage_init(jpegimg);
+
+            camera->get_frame(img);
+            d_jpegimage_compress(jpegimg,img);
+            message = d_new_message();
+            d_message_put_jpeg_image(message,jpegimg);
+        }
 }
 void localiser(void * arg) {
+    int status;
+    DMessage *msg;
+
 }
 
 
@@ -150,8 +210,9 @@ void communiquer(void *arg) {
                             rt_sem_v(&semConnecterRobot);
                             break;
                             // début ajout clément
-                            case ACTION_FIND_ARENA: // TODO
+                            case ACTION_FIND_ARENA:
                             rt_printf("tserver : Action trouver arene\n");
+                            rt_sem_v(&semDetectArena);
                             break;
                         case ACTION_ARENA_FAILED: // TODO
                             rt_printf("tserver : Action échec detection arene\n");
@@ -234,6 +295,10 @@ void deplacer(void *arg) {
 		                gauche = MOTEUR_AVANT_RAPIDE;
 		                droite = MOTEUR_AVANT_RAPIDE;
 		                break;
+                default:
+                	rt_printf("pas bonne direction\n");
+                	break;
+		                
 		        }
             } else{
 		        switch (move->get_direction(move)) {
@@ -257,6 +322,9 @@ void deplacer(void *arg) {
 		                gauche = MOTEUR_AVANT_LENT;
 		                droite = MOTEUR_AVANT_LENT;
 		                break;
+                default:
+                	rt_printf("pas bonne direction\n");
+                	break;
 		        }
             }
             rt_mutex_release(&mutexMove);
