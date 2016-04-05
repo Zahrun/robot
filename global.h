@@ -8,22 +8,22 @@
 #ifndef GLOBAL_H
 #define	GLOBAL_H
 
-#define ONE_SECOND = 1000000 ;
-#define QUARTER_SECOND = 250000 ;
+#define ONE_SECOND 1000000
+#define QUARTER_SECOND 250000
 
 #include "includes.h"
 
 /* @descripteurs des tâches */
-extern RT_TASK tServeur;
+extern RT_TASK tcommuniquer;
 extern RT_TASK tconnect;
-extern RT_TASK tmove;
+extern RT_TASK tdeplacer;
 extern RT_TASK tenvoyer;
 
 //liuzp add start
-extern RT_TASK th_battery;
-extern RT_TASK th_watchdog;
-extern RT_TASK th_localiser;
-extern RT_TASK th_calibrer;
+extern RT_TASK tbattery;
+extern RT_TASK twatchdog;
+extern RT_TASK tlocaliser;
+extern RT_TASK tcalibrer;
 //liuzp add end 
 
 

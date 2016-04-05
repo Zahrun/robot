@@ -74,11 +74,11 @@ void initStruct(void) {
 
 	if (err = rt_sem_create(&semWatchdog, NULL, 0, S_FIFO)) {
         rt_printf("Error semaphore create: %s\n", strerror(-err));
-        exit(EXIT_FAILURE)
+        exit(EXIT_FAILURE);
 	}
 
     /* Creation des taches */
-    if (err = rt_task_create(&tServeur, NULL, 0, PRIORITY_TSERVEUR, 0)) {
+    if (err = rt_task_create(&tcommuniquer, NULL, 0, PRIORITY_TSERVEUR, 0)) {
         rt_printf("Error task create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
@@ -86,7 +86,7 @@ void initStruct(void) {
         rt_printf("Error task create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
-    if (err = rt_task_create(&tmove, NULL, 0, PRIORITY_TMOVE, 0)) {
+    if (err = rt_task_create(&tdeplacer, NULL, 0, PRIORITY_TMOVE, 0)) {
         rt_printf("Error task create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
@@ -104,15 +104,10 @@ void initStruct(void) {
         exit(EXIT_FAILURE);
     }
 
-    if (err = rt_task_create(&tcalibrer, NULL, 0, PRIORITY_CALIBRER, 0)) {
+    /*if (err = rt_task_create(&tcalibrer, NULL, 0, PRIORITY_CALIBRER, 0)) {
         rt_printf("Error task create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
-    }
-
-	if (err = rt_task_create(&twatchdog, &watchdog, NULL)) {
-		rt_printf("Error task start: %s\n", strerror(-err));
-		exit(EXIT_FAILURE);
-	}
+    }*/
 
     /* Creation des files de messages */
     if (err = rt_queue_create(&queueMsgGUI, "toto", MSG_QUEUE_SIZE*sizeof(DMessage), MSG_QUEUE_SIZE, Q_FIFO)){
@@ -132,11 +127,11 @@ void startTasks() {
         rt_printf("Error task start: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
-    if (err = rt_task_start(&tServeur, &communiquer, NULL)) {
+    if (err = rt_task_start(&tcommuniquer, &communiquer, NULL)) {
         rt_printf("Error task start: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
-    if (err = rt_task_start(&tmove, &deplacer, NULL)) {
+    if (err = rt_task_start(&tdeplacer, &deplacer, NULL)) {
         rt_printf("Error task start: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
@@ -166,10 +161,10 @@ void startTasks() {
 }
 
 void deleteTasks() {
-    rt_task_delete(&tServeur);
+    rt_task_delete(&tcommuniquer);
     rt_task_delete(&tconnect);
     rt_task_delete(&tcommuniquer);
-    rt_task_delete(&tmove);
+    rt_task_delete(&tdeplacer);
     rt_task_delete(&tbattery);
     rt_task_delete(&twatchdog);
     rt_task_delete(&tlocaliser);

@@ -7,9 +7,10 @@
 
 #include "global.h"
 
-RT_TASK tServeur;
+RT_TASK tcommuniquer;
 RT_TASK tconnect;
-RT_TASK tmove;
+RT_TASK tdeplacer;
+RT_TASK tbattery;
 RT_TASK tenvoyer;
 RT_TASK twatchdog;
 
@@ -40,7 +41,3 @@ int PRIORITY_WATCHDOG = 30;
 int PRIORITY_LOCALISER = 15;
 int PRIORITY_CALIBRER = 25;
 //liuzp add end 
-
-int ONE_SECOND = 1000000 ; /* value in nanoseconds */
-
-

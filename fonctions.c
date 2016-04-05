@@ -30,9 +30,9 @@ void battery(void * arg) {
         {
             rt_printf("Battery ERROR info");
         }
-        battery->setlevel(battery,*bat);
+        battery->set_level(battery,*bat);
         message = d_new_message();
-        message->put_battery_level(message, *battery);
+        message->put_battery_level(message, battery);
         
         if (write_in_queue(&queueMsgGUI, message, sizeof (DMessage)) < 0) {
             message->free(message);
@@ -48,11 +48,10 @@ void battery(void * arg) {
 void calibrer(void * arg) {
         //init msg
         DMessage *message;
-
+        
         //init camera
         DCamera *camera;
         camera = d_new_camera();
-        d_camera_init(camera);
         //init Dimage;
         DImage *img;
         //init Djpegimage
@@ -60,16 +59,18 @@ void calibrer(void * arg) {
         while(1)
         {
             img=d_new_image();
-            d_image_init(img);
             jpegimg= d_new_jpegimage();
-            d_jpegimage_init(jpegimg);
 
-            camera->get_frame(img);
+            camera->get_frame(camera, img);
             d_jpegimage_compress(jpegimg,img);
             message = d_new_message();
             d_message_put_jpeg_image(message,jpegimg);
+            
+            
         }
 }
+
+
 void localiser(void * arg) {
     int status;
     DMessage *msg;
