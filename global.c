@@ -1,10 +1,3 @@
-/*
- * File:   global.h
- * Author: pehladik
- *
- * Created on 21 avril 2011, 12:14
- */
-
 #include "global.h"
 
 RT_TASK tServeur;
@@ -17,6 +10,9 @@ RT_MUTEX mutexEtat;
 RT_MUTEX mutexMove;
 
 RT_SEM semConnecterRobot;
+RT_SEM semWatchdog;
+RT_SEM semBatterie;
+RT_SEM semDetectArena;
 
 RT_QUEUE queueMsgGUI;
 
@@ -33,14 +29,9 @@ int PRIORITY_TSERVEUR = 30;
 int PRIORITY_TCONNECT = 20;
 int PRIORITY_TMOVE = 10;
 int PRIORITY_TENVOYER = 25;
-
-//liuzp add start
 int PRIORITY_BATTERY = 5;
 int PRIORITY_WATCHDOG = 30;
 int PRIORITY_LOCALISER = 15;
 int PRIORITY_CALIBRER = 25;
-//liuzp add end 
-
-int ONE_SECOND = 1000000 ; /* value in nanoseconds */
 
 

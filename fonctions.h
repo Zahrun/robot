@@ -1,10 +1,3 @@
-/* 
- * File:   fonctions.h
- * Author: pehladik
- *
- * Created on 12 janvier 2012, 10:19
- */
-
 #ifndef FONCTIONS_H
 #define	FONCTIONS_H
 

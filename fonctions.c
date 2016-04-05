@@ -2,15 +2,23 @@
 
 int write_in_queue(RT_QUEUE *msgQueue, void * data, int size);
 
-
+// TODO ajout sémaphore pour le lancer
 void battery(void * arg) {
     int *bat;
     DMessage *message;
     DBattery *battery;
 	int status;
+	rt_task_set_periodic(NULL, TM_NOW,QUARTER_SECOND ); // 250ms
     while(1)
     {
-		rt_task_sleep_until(QUARTER_SECOND);// 250ms
+
+
+		rt_task_wait_period(NULL); // plus précis que : rt_task_sleep_until()
+
+		rt_printf("tbattery : Attente du sémaphore semWatchdog\n");
+		rt_sem_p(&semBatterie, TM_INFINITE);
+        rt_printf("tbattery : Lancement de test de batterie (sémaphore reçue)\n");
+
 		status = robot->get_vbat(robot,bat);
         rt_printf("Battery info: %d\n", *bat);
         if(status == BATTERY_OFF)
@@ -45,30 +53,36 @@ void battery(void * arg) {
 - LED qui clignot normalement <=> robot en attente de co
 - LED allumée fixe <=> robot connecté */
 
+
 void calibrer(void * arg) {
-        //init msg
-        DMessage *message;
 
-        //init camera
-        DCamera *camera;
-        camera = d_new_camera();
-        d_camera_init(camera);
-        //init Dimage;
-        DImage *img;
-        //init Djpegimage
-        DJpegimage *jpegimg;
-        while(1)
-        {
-            img=d_new_image();
-            d_image_init(img);
-            jpegimg= d_new_jpegimage();
-            d_jpegimage_init(jpegimg);
+	rt_printf("tcalibrer : Attente du sémarphore semDetectArena\n");
+	rt_sem_p(&semDetectArena, TM_INFINITE);
+    rt_printf("tcalibrer : Lancement de la calibration d'arène (sémaphore reçue)\n");
 
-            camera->get_frame(img);
-            d_jpegimage_compress(jpegimg,img);
-            message = d_new_message();
-            d_message_put_jpeg_image(message,jpegimg);
-        }
+    //init msg
+    DMessage *message;
+
+    //init camera
+    DCamera *camera;
+    camera = d_new_camera();
+    d_camera_init(camera);
+    //init Dimage;
+    DImage *img;
+    //init Djpegimage
+    DJpegimage *jpegimg;
+    while(1)
+    {
+        img=d_new_image();
+        d_image_init(img);
+        jpegimg= d_new_jpegimage();
+        d_jpegimage_init(jpegimg);
+
+        camera->get_frame(img);
+        d_jpegimage_compress(jpegimg,img);
+        message = d_new_message();
+        d_message_put_jpeg_image(message,jpegimg);
+    }
 }
 void localiser(void * arg) {
     int status;
@@ -107,7 +121,7 @@ void watchdog(void * arg) {
 
 		rt_printf("twathdog : Attente du sémarphore semWatchdog\n");
 		rt_sem_p(&semWatchdog, TM_INFINITE);
-        rt_printf("twatchdog Watchdog en marche\n");
+        rt_printf("twatchdog : Watchdog en marche (sémaphore reçue)\n");
 		status = robot->get_status(robot);
 
 		
@@ -154,6 +168,8 @@ void connecter(void * arg) {
 
 			// libération du semaphore pour lancer le watchdog ( twatchdog était en attente )
 			rt_sem_v(&semWatchdog);
+			// libération du semaphore pour lancer le test de batterie ( tbattery était en attente )
+			rt_sem_v(&semBatterie);
 
             if (status == STATUS_OK){
                 rt_printf("tconnect : Robot démarrer\n");
