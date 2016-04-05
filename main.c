@@ -79,12 +79,12 @@ void initStruct(void) {
 
     if (err = rt_sem_create(&semBatterie, NULL, 0, S_FIFO)) {
         rt_printf("Error semaphore create: %s\n", strerror(-err));
-        exit(EXIT_FAILURE)
+        exit(EXIT_FAILURE);
     }
 
     if (err = rt_sem_create(&semDetectArena, NULL, 0, S_FIFO)) {
         rt_printf("Error semaphore create: %s\n", strerror(-err));
-        exit(EXIT_FAILURE)
+        exit(EXIT_FAILURE);
     }
 
     /* Creation des taches */
