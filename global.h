@@ -1,15 +1,8 @@
-/* 
- * File:   global.h
- * Author: pehladik
- *
- * Created on 12 janvier 2012, 10:11
- */
-
 #ifndef GLOBAL_H
 #define	GLOBAL_H
 
-#define ONE_SECOND 1000000
-#define QUARTER_SECOND 250000
+#define ONE_SECOND 1000000000  /* value in nanoseconds */
+#define QUARTER_SECOND 250000000 
 
 #include "includes.h"
 
@@ -32,9 +25,10 @@ extern RT_MUTEX mutexEtat;
 extern RT_MUTEX mutexMove;
 
 /* @descripteurs des sempahore */
-extern RT_SEM semDetectArena;			// ACTION_FIND_ARENA
+extern RT_SEM semDetectArena; // ACTION_FIND_ARENA
 extern RT_SEM semConnecterRobot;
 extern RT_SEM semWatchdog;
+extern RT_SEM semBatterie;
 extern RT_SEM semCamera;
 
 /* @descripteurs des files de messages */
@@ -53,7 +47,7 @@ extern int PRIORITY_TSERVEUR;
 extern int PRIORITY_TCONNECT;
 extern int PRIORITY_TMOVE;
 extern int PRIORITY_TENVOYER;
-extern int PRIORITY_TWATCHDOG; // todo
+extern int PRIORITY_TWATCHDOG;
 
 //liuzp add start 
 extern int PRIORITY_BATTERY;

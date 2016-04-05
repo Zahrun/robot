@@ -1,10 +1,3 @@
-/* 
- * File:   fonctions.h
- * Author: pehladik
- *
- * Created on 12 janvier 2012, 10:19
- */
-
 #ifndef FONCTIONS_H
 #define	FONCTIONS_H
 
@@ -14,14 +7,14 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
-        void connecter (void * arg);
-        void communiquer(void *arg);
-        void deplacer(void *arg);
-        void envoyer(void *arg);
-        void watchdog(void *arg);
-        void battery (void * arg);
-        void calibrer (void * arg);
-        void localiser (void * arg);
+    void connecter(void * arg);
+    void communiquer(void *arg);
+    void deplacer(void *arg);
+    void envoyer(void *arg);
+    void watchdog(void *arg);
+    void battery(void * arg);
+    void calibrer(void * arg);
+    void localiser(void * arg);
 
 #ifdef	__cplusplus
 }

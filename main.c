@@ -72,10 +72,20 @@ void initStruct(void) {
         exit(EXIT_FAILURE);
     }
 
-	if (err = rt_sem_create(&semWatchdog, NULL, 0, S_FIFO)) {
+    if (err = rt_sem_create(&semWatchdog, NULL, 0, S_FIFO)) {
         rt_printf("Error semaphore create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
-	}
+    }
+
+    if (err = rt_sem_create(&semBatterie, NULL, 0, S_FIFO)) {
+        rt_printf("Error semaphore create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE)
+    }
+
+    if (err = rt_sem_create(&semDetectArena, NULL, 0, S_FIFO)) {
+        rt_printf("Error semaphore create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE)
+    }
 
     /* Creation des taches */
     if (err = rt_task_create(&tcommuniquer, NULL, 0, PRIORITY_TSERVEUR, 0)) {
@@ -110,7 +120,7 @@ void initStruct(void) {
     }*/
 
     /* Creation des files de messages */
-    if (err = rt_queue_create(&queueMsgGUI, "toto", MSG_QUEUE_SIZE*sizeof(DMessage), MSG_QUEUE_SIZE, Q_FIFO)){
+    if (err = rt_queue_create(&queueMsgGUI, "toto", MSG_QUEUE_SIZE * sizeof (DMessage), MSG_QUEUE_SIZE, Q_FIFO)) {
         rt_printf("Error msg queue create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
