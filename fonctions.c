@@ -85,6 +85,7 @@ void localiser(void * arg) { // En cours ( Alexis )
     //init camera
     DCamera *camera;
     camera = d_new_camera();
+    camera->open(camera);
     //init Dimage;
     DImage *image;
     //init Djpegimage

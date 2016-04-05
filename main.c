@@ -169,13 +169,13 @@ void startTasks() {
     if (err = rt_task_start(&tbattery, &battery, NULL)) {
         rt_printf("Error task battery start: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
-    }/*
-    if (err = rt_task_start(&twatchdog, &watchdog, NULL)) {
-        rt_printf("Error task watchdog start: %s\n", strerror(-err));
-        exit(EXIT_FAILURE);
     }
     if (err = rt_task_start(&tlocaliser, &localiser, NULL)) {
         rt_printf("Error task localiser start: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }/*
+    if (err = rt_task_start(&twatchdog, &watchdog, NULL)) {
+        rt_printf("Error task watchdog start: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
     if (err = rt_task_start(&tcalibrer, &calibrer, NULL)) {
