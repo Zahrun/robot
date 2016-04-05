@@ -88,7 +88,18 @@ void initStruct(void) {
     }
 
     /* Creation des taches */
-    if (err = rt_task_create(&tcommuniquer, NULL, 0, PRIORITY_TSERVEUR, 0)) {
+
+    if (err = rt_task_create(&tbattery, NULL, 0, PRIORITY_BATTERY, 0)) {
+        rt_printf("Error task create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+    
+    if (err = rt_task_create(&tcalibrer, NULL, 0, PRIORITY_CALIBRER, 0)) {
+        rt_printf("Error task create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+    
+    if (err = rt_task_create(&tcommuniquer, NULL, 0, PRIORITY_TCOMMUNIQUER, 0)) {
         rt_printf("Error task create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
@@ -96,7 +107,7 @@ void initStruct(void) {
         rt_printf("Error task create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
-    if (err = rt_task_create(&tdeplacer, NULL, 0, PRIORITY_TMOVE, 0)) {
+    if (err = rt_task_create(&tdeplacer, NULL, 0, PRIORITY_TDEPLACER, 0)) {
         rt_printf("Error task create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
@@ -104,8 +115,7 @@ void initStruct(void) {
         rt_printf("Error task create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
-
-    if (err = rt_task_create(&tbattery, NULL, 0, PRIORITY_BATTERY, 0)) {
+    if (err = rt_task_create(&tlocaliser, NULL, 0, PRIORITY_LOCALISER, 0)) {
         rt_printf("Error task create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
@@ -113,11 +123,6 @@ void initStruct(void) {
         rt_printf("Error task create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
-
-    /*if (err = rt_task_create(&tcalibrer, NULL, 0, PRIORITY_CALIBRER, 0)) {
-        rt_printf("Error task create: %s\n", strerror(-err));
-        exit(EXIT_FAILURE);
-    }*/
 
     /* Creation des files de messages */
     if (err = rt_queue_create(&queueMsgGUI, "toto", MSG_QUEUE_SIZE * sizeof (DMessage), MSG_QUEUE_SIZE, Q_FIFO)) {
@@ -134,38 +139,38 @@ void initStruct(void) {
 void startTasks() {
     int err;
     if (err = rt_task_start(&tconnect, &connecter, NULL)) {
-        rt_printf("Error task start: %s\n", strerror(-err));
+        rt_printf("Error task connecter start: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
     if (err = rt_task_start(&tcommuniquer, &communiquer, NULL)) {
-        rt_printf("Error task start: %s\n", strerror(-err));
+        rt_printf("Error task communiquer start: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
     if (err = rt_task_start(&tdeplacer, &deplacer, NULL)) {
-        rt_printf("Error task start: %s\n", strerror(-err));
+        rt_printf("Error task deplacer start: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
     if (err = rt_task_start(&tenvoyer, &envoyer, NULL)) {
-        rt_printf("Error task start: %s\n", strerror(-err));
+        rt_printf("Error task envoyer start: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
 
     if (err = rt_task_start(&tbattery, &battery, NULL)) {
-        rt_printf("Error task start: %s\n", strerror(-err));
+        rt_printf("Error task battery start: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
-    }
+    }/*
     if (err = rt_task_start(&twatchdog, &watchdog, NULL)) {
-        rt_printf("Error task start: %s\n", strerror(-err));
+        rt_printf("Error task watchdog start: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
     if (err = rt_task_start(&tlocaliser, &localiser, NULL)) {
-        rt_printf("Error task start: %s\n", strerror(-err));
+        rt_printf("Error task localiser start: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
     if (err = rt_task_start(&tcalibrer, &calibrer, NULL)) {
-        rt_printf("Error task start: %s\n", strerror(-err));
+        rt_printf("Error task calibrer start: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
-    }
+    }*/
 
 
 }

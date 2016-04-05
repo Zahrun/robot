@@ -5,40 +5,47 @@ int write_in_queue(RT_QUEUE *msgQueue, void * data, int size);
 // TODO ajout sémaphore pour le lancer
 
 void battery(void * arg) {
-    int *bat;
+    int bat;
     DMessage *message;
-    DBattery *battery;
+    DBattery *battery = d_new_battery();
     int status;
     rt_task_set_periodic(NULL, TM_NOW, QUARTER_SECOND); // 250ms
+
     while (1) {
-
-
-        rt_task_wait_period(NULL); // plus précis que : rt_task_sleep_until()
-
         rt_printf("tbattery : Attente du sémaphore semWatchdog\n");
         rt_sem_p(&semBatterie, TM_INFINITE);
         rt_printf("tbattery : Lancement de test de batterie (sémaphore reçue)\n");
 
-        status = robot->get_vbat(robot, bat);
-        rt_printf("Battery info: %d\n", *bat);
-        if (status == BATTERY_OFF) {
-            rt_printf("Battery OFF info: %d, capacite: %d\n", status, *bat);
-        } else if (status == BATTERY_LOW) {
-            rt_printf("Battery LOW info: %d, capacite: %d\n", status, *bat);
+        while (1) {
+            rt_mutex_acquire(&mutexEtat, TM_INFINITE);
+            status = etatCommRobot;
+            rt_mutex_release(&mutexEtat);
 
-        } else if (status == BATTERY_OK) {
-            rt_printf("Battery info: %d, capacite: %d\n", status, *bat);
-        } else {
-            rt_printf("Battery ERROR info");
-        }
-        battery->set_level(battery, *bat);
-        message = d_new_message();
-        message->put_battery_level(message, battery);
+            if (status != STATUS_OK) {
+                break;
+            }
 
-        if (write_in_queue(&queueMsgGUI, message, sizeof (DMessage)) < 0) {
-            message->free(message);
+            status = robot->get_vbat(robot, &bat);
+            if (status == STATUS_OK) {
+                rt_printf("Battery OK status: %d, niveau: %d\n", status, bat);
+
+                battery = d_new_battery();
+                battery->set_level(battery, bat);
+                message = d_new_message();
+                message->put_battery_level(message, battery);
+                message->print(message,100);
+
+                if (write_in_queue(&queueMsgGUI, message, sizeof (DMessage)) < 0) {
+                    message->free(message);
+                }
+            } else {
+                rt_printf("Battery ERROR status: %d, niveau: %d\n", status, bat);
+            }
+
+            rt_task_wait_period(NULL); // plus précis que : rt_task_sleep_until()
         }
     }
+
 }
 
 /* Notes pratiques par rapport à la LED du robot :
@@ -98,36 +105,38 @@ void envoyer(void * arg) {
 
 void watchdog(void * arg) {
     int status;
-    rt_task_set_periodic(NULL, TM_NOW, ONE_SECOND);
-    while (1) { // changer cond?
+    rt_task_set_periodic(NULL, TM_NOW, HALF_SECOND);
 
-        rt_task_wait_period(NULL);
-        // pas de : rt_task_sleep_until(ONE_SECOND);
-        // on a une seconde pile comme ça, pas 1s + tps d'activité du watchdog		
+    rt_printf("twathdog : Attente du sémarphore semWatchdog\n");
+    rt_sem_p(&semWatchdog, TM_INFINITE);
+    rt_printf("twatchdog : Watchdog en marche (sémaphore reçue)\n");
 
+    while (1) { // changer cond?	
 
-        rt_printf("twathdog : Attente du sémarphore semWatchdog\n");
-        rt_sem_p(&semWatchdog, TM_INFINITE);
-        rt_printf("twatchdog : Watchdog en marche (sémaphore reçue)\n");
         status = robot->get_status(robot);
-
-
 
         if (status == STATUS_OK) {
 
-            status = robot->reload_wdt(robot);
+            do {
+                rt_printf("twatchdog : envoi du reload\n");
+                status = robot->reload_wdt(robot);
 
-            if (status == STATUS_OK) {
-                rt_printf("twatchdog : reload envoyé au robot\n");
-            } else {
-                rt_printf("PROBLEME => twatchdog : reload NON envoyé au robot\n");
-            }
+                if (status == STATUS_OK) {
+                    rt_printf("twatchdog : reload envoyé au robot\n");
+                } else {
+                    rt_printf("PROBLEME => twatchdog : reload NON envoyé au robot %d : %c\n", status, status);
+                }
+            } while (status != STATUS_OK);
         } else {
-            rt_printf("PROBLEME => twatchdog : get_status initial /= STATUS_OK\n");
+            rt_printf("PROBLEME => twatchdog : get_status initial %d : %c\n", status, status);
             rt_mutex_acquire(&mutexEtat, TM_INFINITE);
             etatCommRobot = status;
             rt_mutex_release(&mutexEtat);
         }
+
+        rt_task_wait_period(NULL);
+        // pas de : rt_task_sleep_until(ONE_SECOND);
+        // on a une seconde pile comme ça, pas 1s + tps d'activité du watchdog	
     }
 }
 
@@ -148,17 +157,21 @@ void connecter(void * arg) {
         rt_mutex_release(&mutexEtat);
 
         if (status == STATUS_OK) {
-            //    status = robot->start_insecurely(robot);
-            status = robot->start(robot);
+            status = robot->start_insecurely(robot);
+            //status = robot->start(robot);
             // lance le watchdog qui attendra d_robot_reload_wdt toutes les 1 sec ( avec tolérance de 50 ms )
 
-            // libération du semaphore pour lancer le watchdog ( twatchdog était en attente )
-            rt_sem_v(&semWatchdog);
-            // libération du semaphore pour lancer le test de batterie ( tbattery était en attente )
-            rt_sem_v(&semBatterie);
+            rt_mutex_acquire(&mutexEtat, TM_INFINITE);
+            etatCommRobot = status;
+            rt_mutex_release(&mutexEtat);
 
             if (status == STATUS_OK) {
                 rt_printf("tconnect : Robot démarrer\n");
+
+                // libération du semaphore pour lancer le watchdog ( twatchdog était en attente )
+                rt_sem_v(&semWatchdog);
+                // libération du semaphore pour lancer le test de batterie ( tbattery était en attente )
+                rt_sem_v(&semBatterie);
             }
         }
 

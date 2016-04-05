@@ -1,7 +1,7 @@
 #ifndef GLOBAL_H
 #define	GLOBAL_H
 
-#define ONE_SECOND 1000000000  /* value in nanoseconds */
+#define HALF_SECOND 500000000  /* value in nanoseconds */
 #define QUARTER_SECOND 250000000 
 
 #include "includes.h"
@@ -43,9 +43,9 @@ extern DMovement *move;
 
 /* @constantes */
 extern int MSG_QUEUE_SIZE;
-extern int PRIORITY_TSERVEUR;
+extern int PRIORITY_TCOMMUNIQUER;
 extern int PRIORITY_TCONNECT;
-extern int PRIORITY_TMOVE;
+extern int PRIORITY_TDEPLACER;
 extern int PRIORITY_TENVOYER;
 extern int PRIORITY_TWATCHDOG;
 
