@@ -23,7 +23,10 @@ extern RT_TASK tcalibrer;
 extern RT_MUTEX mutexEtat;
 extern RT_MUTEX mutexMove;
 extern RT_MUTEX mutexCamera;
+extern RT_MUTEX mutexImage;
 extern RT_MUTEX mutexPosition;
+extern RT_MUTEX mutexArena;
+extern RT_MUTEX mutexCalibration;
 
 /* @descripteurs des sempahore */
 extern RT_SEM semDetectArena; // ACTION_FIND_ARENA
@@ -39,9 +42,12 @@ extern RT_QUEUE queueMsgGUI;
 extern int etatCommMoniteur;
 extern int etatCommRobot;
 extern int etatLocalisation;
+extern char calibration;
 extern DServer *serveur;
 extern DRobot *robot;
 extern DMovement *move;
+extern DImage *image;
+extern DArena *arena;
 
 /* @constantes */
 extern int MSG_QUEUE_SIZE;

@@ -12,7 +12,10 @@ RT_TASK twatchdog;
 RT_MUTEX mutexEtat;
 RT_MUTEX mutexMove;
 RT_MUTEX mutexCamera;
+RT_MUTEX mutexImage;
 RT_MUTEX mutexPosition;
+RT_MUTEX mutexArena;
+RT_MUTEX mutexCalibration;
 
 RT_SEM semConnecterRobot;
 RT_SEM semWatchdog;
@@ -25,10 +28,13 @@ RT_QUEUE queueMsgGUI;
 int etatCommMoniteur = 1;
 int etatCommRobot = 1;
 int etatLocalisation = ACTION_STOP_COMPUTE_POSITION; // par défaut le thread tlocaliser ne calcul pas la position!
+char calibration = 0; // 0 pas de calibration, 1 demande de calibration, 2 reussite
 DPosition *position;
 DRobot *robot;
 DMovement *move;
 DServer *serveur;
+DImage *image;
+DArena *arena;
 
 
 int MSG_QUEUE_SIZE = 10;

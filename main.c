@@ -7,8 +7,17 @@
 #include "fonctions.h"
 
 /**
- * \fn void initStruct(void)
- * \brief Initialisation des structures de l'application (tâches, mutex, 
+ * \fn void innecter robot
+tconnect : Ouverture de la communication avec le robot
+tserver : Attente d'un message
+Message{type:R size:0004 payload:0 0 0 2 }
+tconnecter : Envoi message
+tenvoyer : envoi d'un message au moniteur
+tenvoyer : Attente d'un message
+tconnect : Attente du sémarphore semConnecterRobot
+tmove : Activation périodinitStruct(void)
+ * \brief Initialisation de
+    DJpegimage *jpeg;s structures de l'application (tâches, mutex, 
  * semaphore, etc.)
  */
 void initStruct(void);
@@ -47,6 +56,7 @@ int main(int argc, char**argv) {
      */
     rt_print_auto_init(1);
     initStruct();
+    DJpegimage *jpeg;
     startTasks();
     pause();
     deleteTasks();
@@ -62,12 +72,33 @@ void initStruct(void) {
         exit(EXIT_FAILURE);
     }
 
+    DJpegimage *jpeg;
     if (err = rt_mutex_create(&mutexMove, NULL)) {
         rt_printf("Error mutex create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
 
     if (err = rt_mutex_create(&mutexCamera, NULL)) {
+        rt_printf("Error mutex create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+
+    if (err = rt_mutex_create(&mutexImage, NULL)) {
+        rt_printf("Error mutex create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+
+    if (err = rt_mutex_create(&mutexPosition, NULL)) {
+        rt_printf("Error mutex create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+
+    if (err = rt_mutex_create(&mutexCalibration, NULL)) {
+        rt_printf("Error mutex create: %s\n", strerror(-err));
+        exit(EXIT_FAILURE);
+    }
+
+    if (err = rt_mutex_create(&mutexArena, NULL)) {
         rt_printf("Error mutex create: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
     }
@@ -177,11 +208,11 @@ void startTasks() {
     if (err = rt_task_start(&twatchdog, &watchdog, NULL)) {
         rt_printf("Error task watchdog start: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
-    }
+    }*/
     if (err = rt_task_start(&tcalibrer, &calibrer, NULL)) {
         rt_printf("Error task calibrer start: %s\n", strerror(-err));
         exit(EXIT_FAILURE);
-    }*/
+    }
 
 
 }

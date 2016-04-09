@@ -53,28 +53,57 @@ void battery(void * arg) {
 
 
 void calibrer(void * arg) {
-    rt_printf("tcalibrer : Attente du sémarphore semDetectArena\n");
-    rt_sem_p(&semDetectArena, TM_INFINITE);
-    rt_printf("tcalibrer : Lancement de la calibration d'arène (sémaphore reçue)\n");
 
-    //init msg
+    char cal;
     DMessage *message;
+    DImage img;
+    DJpegimage *jpg;
 
-    //init camera
-    DCamera *camera;
-    camera = d_new_camera();
-    //init Dimage;
-    DImage *img;
-    //init Djpegimage
-    DJpegimage *jpegimg;
     while (1) {
-        img = d_new_image();
-        jpegimg = d_new_jpegimage();
+        rt_printf("tcalibrer : Attente du sémarphore semDetectArena\n");
+        rt_sem_p(&semDetectArena, TM_INFINITE);
+        rt_printf("tcalibrer : Lancement de la calibration d'arène (sémaphore reçue)\n");
 
-        camera->get_frame(camera, img);
-        d_jpegimage_compress(jpegimg, img);
-        message = d_new_message();
-        d_message_put_jpeg_image(message, jpegimg);
+        rt_mutex_acquire(&mutexCalibration, TM_INFINITE);
+        cal = calibration;
+        rt_mutex_release(&mutexCalibration);
+
+        switch (cal) {
+            case 0:
+                rt_printf("tcalibrer : Arret calibration\n");
+                break;
+            case 1:
+                rt_printf("tcalibrer : Essai calibration\n");
+
+                //init msg
+                message = d_new_message();
+
+                rt_mutex_acquire(&mutexImage, TM_INFINITE);
+                img = *image;
+                rt_mutex_release(&mutexImage);
+
+                rt_mutex_acquire(&mutexArena, TM_INFINITE);
+                arena = img.compute_arena_position(&img);
+                rt_mutex_release(&mutexArena);
+
+                d_imageshop_draw_arena(&img, arena);
+                jpg = d_new_jpegimage();
+                jpg->compress(jpg, &img);
+                d_message_put_jpeg_image(message, jpg);
+                jpg->free(jpg);
+
+                if (write_in_queue(&queueMsgGUI, message, sizeof (DMessage)) < 0) {
+                    message->free(message);
+                }
+                break;
+            case 2:
+                rt_printf("tcalibrer : Success calibration\n");
+                break;
+            default:
+                rt_printf("tcalibrer : Erreur calibration\n");
+                break;
+
+        }
     }
 
 }
@@ -87,13 +116,17 @@ void localiser(void * arg) { // En cours ( Alexis )
     camera = d_new_camera();
     camera->open(camera);
     //init Dimage;
-    DImage *image;
+    rt_mutex_acquire(&mutexImage, TM_INFINITE);
+    image = d_new_image();
+    rt_mutex_release(&mutexImage);
+
     //init Djpegimage
     DJpegimage *jpeg;
+    jpeg = d_new_jpegimage();
     DPosition *position;
     DArena *arena;
 
-    rt_printf("tlocaliser : Attente du sémarphore semLocalisation\n");
+    rt_printf("tlocaliser :jpegimg Attente du sémarphore semLocalisation\n");
     rt_sem_p(&semLocalisation, TM_INFINITE);
     rt_printf("tlocaliser : Lancement de la localisation selon etatLocalisation (sémaphore reçue)\n");
 
@@ -102,7 +135,7 @@ void localiser(void * arg) { // En cours ( Alexis )
     while (1) {
         rt_task_wait_period(NULL);
 
-        //On check l'état de la communication avec le moniteur
+        //On check l'état de la communication avec le moniteur 
         //Pour cela on récupère le mutexEtat
         //On écrit l'état de la comunication dans la variable status et on relanche le mutexEtat
         rt_mutex_acquire(&mutexEtat, TM_INFINITE);
@@ -117,6 +150,14 @@ void localiser(void * arg) { // En cours ( Alexis )
             action = etatLocalisation;
             rt_mutex_release(&mutexCamera);
 
+            // Si on calibre, on arrete d'envoyer des nouvelles images
+            rt_mutex_acquire(&mutexCalibration, TM_INFINITE);
+            if (calibration == 1) {
+                rt_mutex_release(&mutexCalibration);
+                continue;
+            }
+            rt_mutex_release(&mutexCalibration);
+
             //On regarde quelle est la valeur de la variable action
             //En fonction, on va soit calculer la position du robot, soit ne rien faire
 
@@ -124,12 +165,14 @@ void localiser(void * arg) { // En cours ( Alexis )
                     //Calcul de la position du robot dans l'arene
                 case ACTION_STOP_COMPUTE_POSITION:
                     rt_printf("tlocaliser : ACTION_STOP_COMPUTE_POSITION detecté\n");
-                    image = d_new_image();
+                    rt_mutex_acquire(&mutexImage, TM_INFINITE);
                     camera->get_frame(camera, image);
+                    rt_mutex_release(&mutexImage);
 
                     if (image != NULL) {
-                        jpeg = d_new_jpegimage();
+                        rt_mutex_acquire(&mutexImage, TM_INFINITE);
                         jpeg->compress(jpeg, image);
+                        rt_mutex_release(&mutexImage);
 
                         message = d_new_message();
                         message->put_jpeg_image(message, jpeg);
@@ -139,23 +182,47 @@ void localiser(void * arg) { // En cours ( Alexis )
                             message->free(message);
                         }
 
-                        image->free(image);
-                        jpeg->free(jpeg);
                     }
                     break;
 
                 case ACTION_COMPUTE_CONTINUOUSLY_POSITION:
                     rt_printf("tlocaliser : ACTION_COMPUTE_CONTINUOUSLY_POSITION detecté\n");
-                    image = d_new_image();
+
+                    rt_mutex_acquire(&mutexCalibration, TM_INFINITE);
+                    if (calibration != 2) {
+                        rt_printf("tlocaliser : impossible car pas d'arene\n");
+                        rt_mutex_release(&mutexCalibration);
+                        rt_mutex_acquire(&mutexImage, TM_INFINITE);
+                        camera->get_frame(camera, image);
+                        rt_mutex_release(&mutexImage);
+
+                        if (image != NULL) {
+                            rt_mutex_acquire(&mutexImage, TM_INFINITE);
+                            jpeg->compress(jpeg, image);
+                            rt_mutex_release(&mutexImage);
+
+                            message = d_new_message();
+                            message->put_jpeg_image(message, jpeg);
+
+                            // TODO : Dire à calibrer arène qu'on a envoyé une image pour qu'il calibre à partir de cette image?
+                            if (write_in_queue(&queueMsgGUI, message, sizeof (DMessage)) < 0) {
+                                message->free(message);
+                            }
+
+                        }
+                        continue;
+                    }
+                    rt_mutex_release(&mutexCalibration);
+
+                    rt_mutex_acquire(&mutexImage, TM_INFINITE);
                     camera->get_frame(camera, image);
 
                     if (image != NULL) {
 
-                           // TODO avoir une arena donnée par calibrer !
+                        // TODO avoir une arena donnée par calibrer !
                         rt_mutex_acquire(&mutexPosition, TM_INFINITE);
+                        rt_mutex_acquire(&mutexArena, TM_INFINITE);
                         position = image->compute_robot_position(image, arena);
-                        rt_mutex_release(&mutexPosition);
-
 
                         if (position != NULL) {
                             d_imageshop_draw_position(image, position);
@@ -165,7 +232,6 @@ void localiser(void * arg) { // En cours ( Alexis )
                             if (write_in_queue(&queueMsgGUI, message, sizeof (DMessage)) < 0) {
                                 message->free(message);
                             }
-                            jpeg = d_new_jpegimage();
                             jpeg->compress(jpeg, image);
 
                             message = d_new_message();
@@ -174,14 +240,13 @@ void localiser(void * arg) { // En cours ( Alexis )
                             if (write_in_queue(&queueMsgGUI, message, sizeof (DMessage)) < 0) {
                                 message->free(message);
                             }
-                            jpeg->free(jpeg);
                         }
-                        image->free(image);
 
+                        rt_mutex_release(&mutexArena);
+                        rt_mutex_release(&mutexPosition);
                     }
-
+                    rt_mutex_release(&mutexImage);
                     break;
-
             }
         }
     }
@@ -329,13 +394,24 @@ void communiquer(void *arg) {
                             // début ajout clément
                         case ACTION_FIND_ARENA:
                             rt_printf("tserver : Action trouver arene\n");
+                            rt_mutex_acquire(&mutexCalibration, TM_INFINITE);
+                            calibration = 1;
+                            rt_mutex_release(&mutexCalibration);
                             rt_sem_v(&semDetectArena);
                             break;
-                        case ACTION_ARENA_FAILED: // TODO
+                        case ACTION_ARENA_FAILED:
                             rt_printf("tserver : Action échec detection arene\n");
+                            rt_mutex_acquire(&mutexCalibration, TM_INFINITE);
+                            calibration = 0;
+                            rt_mutex_release(&mutexCalibration);
+                            rt_sem_v(&semDetectArena);
                             break;
-                        case ACTION_ARENA_IS_FOUND: // TODO
+                        case ACTION_ARENA_IS_FOUND:
                             rt_printf("tserver : Action arene trouvée\n");
+                            rt_mutex_acquire(&mutexCalibration, TM_INFINITE);
+                            calibration = 2;
+                            rt_mutex_release(&mutexCalibration);
+                            rt_sem_v(&semDetectArena);
                             break;
                         case ACTION_COMPUTE_CONTINUOUSLY_POSITION: // TODO
                             rt_printf("tserver : Action calculer position en continu\n");
@@ -462,20 +538,21 @@ void deplacer(void *arg) {
             status = robot->set_motors(robot, gauche, droite);
 
 
+            /* Eviter de perdre la connection
+                        if (status != STATUS_OK) {
+                            rt_mutex_acquire(&mutexEtat, TM_INFINITE);
+                            etatCommRobot = status;
+                            rt_mutex_release(&mutexEtat);
 
-            if (status != STATUS_OK) {
-                rt_mutex_acquire(&mutexEtat, TM_INFINITE);
-                etatCommRobot = status;
-                rt_mutex_release(&mutexEtat);
+                            message = d_new_message();
+                            message->put_state(message, status);
 
-                message = d_new_message();
-                message->put_state(message, status);
-
-                rt_printf("tmove : Envoi message \"%s\":%d\n", message, status);
-                if (write_in_queue(&queueMsgGUI, message, sizeof (DMessage)) < 0) {
-                    message->free(message);
-                }
-            }
+                            rt_printf("tmove : Envoi message \"%s\":%d\n", message, status);
+                            if (write_in_queue(&queueMsgGUI, message, sizeof (DMessage)) < 0) {
+                                message->free(message);
+                            }
+                        }
+             * */
         }
     }
 }
